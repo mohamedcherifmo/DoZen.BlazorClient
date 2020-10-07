@@ -1,7 +1,54 @@
 @page "/authentication/{action}"
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-<RemoteAuthenticatorView Action="@Action" />
+@inject StateContainer State
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+<RemoteAuthenticatorViewCore Action="@Action"
+                             TAuthenticationState="ApplicationAuthenticationState"
+                             AuthenticationState="AuthenticationState"
+                             OnLogInSucceeded="RestoreState"
+                             OnLogOutSucceeded="RestoreState" />
 
 @code{
     [Parameter] public string Action { get; set; }
-}
+    public ApplicationAuthenticationState AuthenticationState { get; set; } =
+           new ApplicationAuthenticationState();
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (RemoteAuthenticationActions.IsAction(RemoteAuthenticationActions.LogIn,
+            Action) ||
+            RemoteAuthenticationActions.IsAction(RemoteAuthenticationActions.LogOut,
+            Action))
+        {
+            AuthenticationState.Id = "NavigationItem";
+
+            await JS.InvokeVoidAsync("sessionDoZenStorage.setItem",
+                AuthenticationState.Id, State.GetStateForLocalStorage());
+        }
+    }
+
+    private async Task RestoreState(ApplicationAuthenticationState state)
+    {
+        Console.WriteLine("Entered RestoreState");
+        var stateDefault="NavigationItem";
+        if (state.Id != null)
+        {
+            Console.WriteLine("State Id is not null");
+            stateDefault=state.Id;
+        }
+
+        var locallyStoredState = await JS.InvokeAsync<string>(
+            "sessionDoZenStorage.getItem", stateDefault);
+
+        if (locallyStoredState != null)
+        {
+            Console.WriteLine("locallyStoredState is not null");
+            State.SetStateFromLocalStorage(locallyStoredState);
+            // await JS.InvokeVoidAsync("sessionDoZenStorage.removeItem", stateDefault);
+            if ( !string.IsNullOrEmpty(State.NavigationItem))
+                NavigationManager.NavigateTo(State.NavigationItem);
+
+        }
+    }
+    }

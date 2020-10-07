@@ -22,7 +22,7 @@ namespace DoZen.BlazorClient
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddScoped<LocalDoZenStore>();
             builder.Services.AddScoped<StateContainer>();
-            builder.Services.AddMsalAuthentication(options =>
+            builder.Services.AddMsalAuthentication<ApplicationAuthenticationState>(options =>
             {
                 builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/Calendars.ReadWrite");
@@ -30,10 +30,10 @@ namespace DoZen.BlazorClient
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/Calendars.Read");
 
                 options.ProviderOptions.LoginMode = "Redirect";
-            });
-           // .AddAccountClaimsPrincipalFactory<OfflineAccountClaimsPrincipalFactory>();
+            })
+            .AddAccountClaimsPrincipalFactory<ApplicationAuthenticationState, OfflineAccountClaimsPrincipalFactory>();
 
-            builder.Services.AddScoped<AccountClaimsPrincipalFactory<RemoteUserAccount>, OfflineAccountClaimsPrincipalFactory>();
+            //builder.Services.AddScoped<AccountClaimsPrincipalFactory<RemoteUserAccount>, OfflineAccountClaimsPrincipalFactory>();
             await builder.Build().RunAsync();
         }
     }
