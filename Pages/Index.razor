@@ -1,0 +1,39 @@
+﻿@page "/"
+@inject StateContainer State
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+
+@code {
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var locallyStoredState = await JS.InvokeAsync<string>(
+               "sessionDoZenStorage.getItem", "NavigationItem");
+
+        if (locallyStoredState != null)
+        {
+            Console.WriteLine("locallyStoredState is not null");
+            State.SetStateFromLocalStorage(locallyStoredState);
+            // await JS.InvokeVoidAsync("sessionDoZenStorage.removeItem", stateDefault);
+if(State.NavigationItem!="/" && !string.IsNullOrEmpty(State.NavigationItem))
+            NavigationManager.NavigateTo(State.NavigationItem);
+
+        }
+
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+      //  State.NavigationItem = "/";
+      //  await JS.InvokeVoidAsync("sessionDoZenStorage.setItem",
+      //                "NavigationItem", State.GetStateForLocalStorage());
+    }
+
+}
